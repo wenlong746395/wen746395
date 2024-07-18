@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snake Game</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background-color: #f0f0f0;
+    }
+    #game-board {
+        border: 1px solid #000;
+        background-color: #fff;
+    }
+    .cell {
+        width: 20px;
+        height: 20px;
+        border: 1px solid #ccc;
+        display: inline-block;
+    }
+    .cell.snake {
+        background-color: green;
+    }
+    .cell.food {
+        background-color: red;
+    }
+</style>
+</head>
+<body>
+<div id="game-board"></div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const WIDTH = 20;
+        const HEIGHT = 15;
+        const CELL_SIZE = 20;
+        const DELAY = 150;
+
+        let snake = [{ x: Math.floor(WIDTH / 2), y: Math.floor(HEIGHT / 2) }];
+        let direction = 'right';
+        let food = generateFood();
+
+        const gameBoard = document.getElementById('game-board');
+        let cells = [];
+
+        function initializeGameBoard() {
+            for (let y = 0; y < HEIGHT; y++) {
+                for (let x = 0; x < WIDTH; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.style.width = `${CELL_SIZE}px`;
+                    cell.style.height = `${CELL_SIZE}px`;
+                    cells.push(cell);
+                    gameBoard.appendChild(cell);
+                }
+                gameBoard.appendChild(document.createElement('br'));
+            }
+        }
+
+        function drawSnake() {
+            cells.forEach(cell => cell.classList.remove('snake'));
+
+            snake.forEach(segment => {
+                const index = segment.y * WIDTH + segment.x;
+                cells[index].classList.add('snake');
+            });
+        }
+
+        function drawFood() {
+            const index = food.y * WIDTH + food.x;
+            cells[index].classList.add('food');
+        }
+
+        function generateFood() {
+            let foodX, foodY;
+            do {
+                foodX = Math.floor(Math.random() * WIDTH);
+                foodY = Math.floor(Math.random() * HEIGHT);
+            } while (snake.some(segment => segment.x === foodX && segment.y === foodY));
+
+            return { x: foodX, y: foodY };
+        }
+
+        function moveSnake() {
+            const head = { ...snake[0] };
+
+            if (direction === 'up') head.y--;
+            if (direction === 'down') head.y++;
+            if (direction === 'left') head.x--;
+            if (direction === 'right') head.x++;
+
+            snake.unshift(head);
+
+            if (head.x === food.x && head.y === food.y) {
+                food = generateFood();
+            } else {
+                snake.pop();
+            }
+        }
+
+        function checkCollision() {
+            const head = snake[0];
+            if (head.x < 0 || head.x >= WIDTH || head.y < 0 || head.y >= HEIGHT) {
+                return true;
+            }
+            if (snake.slice(1).some(segment => segment.x === head.x && segment.y === head.y)) {
+                return true;
+            }
+            return false;
+        }
+
+        function gameOver() {
+            clearInterval(gameInterval);
+            alert('Game Over!');
+        }
+
+        function updateGame() {
+            moveSnake();
+            if (checkCollision()) {
+                gameOver();
+                return;
+            }
+            drawSnake();
+            drawFood();
+        }
+
+        initializeGameBoard();
+        drawSnake();
+        drawFood();
+
+        const gameInterval = setInterval(updateGame, DELAY);
+
+        document.addEventListener('keydown', event => {
+            const key = event.key.toLowerCase();
+            if (key === 'w' && direction !== 'down') direction = 'up';
+            if (key === 's' && direction !== 'up') direction = 'down';
+            if (key === 'a' && direction !== 'right') direction = 'left';
+            if (key === 'd' && direction !== 'left') direction = 'right';
+        });
+    });
+</script>
+</body>
+</html>
